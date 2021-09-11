@@ -49,9 +49,9 @@ MediaPage::Settings::Settings(Arbiter &arbiter, QWidget *parent)
 {
 
     QVBoxLayout *layout = new QVBoxLayout(this);
-    //QLabel *text = new QLabel("Audio Settings");
-    //layout->addWidget(text);
-    //layout->addWidget(Session::Forge::br(), 1);
+    QLabel *text = new QLabel("Audio Settings");
+    layout->addWidget(text);
+    layout->addWidget(Session::Forge::br(), 1);
     layout->addLayout(this->settings_widget());
 }
 
@@ -234,66 +234,12 @@ RadioPlayerTab::~RadioPlayerTab()
 }
 
 
-QWidget *RadioPlayerTab::dialog_body()
-{
-    auto widget = new QWidget(this);
-    auto layout = new QVBoxLayout(widget);
-
-    layout->addStretch();
-    layout->addWidget(this->plugin_selector, 0, Qt::AlignCenter);
-    layout->addStretch();
-
-    return widget;
-}
-
-QWidget *RadioPlayerTab::tuner_test(){
-    auto widget = new QWidget(this);
-    auto layout = new QGridLayout(widget);
-       radioName = new QLabel();
-       radioName->setObjectName(QString::fromUtf8("radioName"));
-       radioName->setEnabled(true);
-       radioName->setGeometry(QRect(140, 80, 361, 81));
-       QFont font;
-       font.setPointSize(35);
-       font.setBold(false);
-       font.setWeight(50);
-       radioName->setFont(font);
-       radioName->setAlignment(Qt::AlignCenter);
-       frequency = new QLabel();
-       frequency->setObjectName(QString::fromUtf8("frequency"));
-       frequency->setGeometry(QRect(540, 90, 131, 61));
-       QFont font1;
-       font1.setPointSize(30);
-       frequency->setFont(font1);
-       Hz = new QLabel();
-       Hz->setObjectName(QString::fromUtf8("Hz"));
-       Hz->setGeometry(QRect(660, 100, 91, 41));
-       Hz->setFont(font1);
-       band = new QLabel();
-       band->setObjectName(QString::fromUtf8("band"));
-       band->setGeometry(QRect(150, 170, 201, 51));
-       QFont font2;
-       font2.setPointSize(25);
-       band->setFont(font2);
-       bank = new QLabel();
-       bank->setObjectName(QString::fromUtf8("bank"));
-       bank->setGeometry(QRect(580, 170, 81, 51));
-       QFont font3;
-       font3.setPointSize(20);
-       bank->setFont(font3);
-       bank->setAlignment(Qt::AlignCenter);
-
-       return widget;
-}
-
 QWidget *RadioPlayerTab::tuner_widget()
 {
     auto widget = new QWidget(this);
     auto layout = new QGridLayout(widget);
     layout->setSpacing(0);
 
-    auto dialog = new Dialog(this->arbiter, true, this->window());
-    dialog->set_body(this->dialog_body());
     auto station = new QLabel("POG");
     station->setStyleSheet("QLabel {font-size: 40pt;}");
 
@@ -323,10 +269,6 @@ QWidget *RadioPlayerTab::tuner_widget()
     layout->addWidget(band,1,0, Qt::AlignHCenter);
     layout->addWidget(freq,0,1, Qt::AlignHCenter);
     layout->addWidget(memory,1,1, Qt::AlignHCenter);
-    //layout->addStretch(2);
-
-    // layout->addWidget(info, 3);
-    //layout->addStretch(3);
 
     return widget;
 }

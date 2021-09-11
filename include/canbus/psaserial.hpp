@@ -51,6 +51,9 @@ struct radioData{
     QString USBTitle;
     int USBTimeCurr;
     int USBTimeAll;
+    int fuelToEnd;
+    float fuelNow;
+    int rpms;
 };
 
 extern radioData stuff;

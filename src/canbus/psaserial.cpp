@@ -16,9 +16,9 @@ void psaserial::contactSerial(){
 
                 if ((serialPortInfo.productIdentifier() == arduino_pid) && (serialPortInfo.vendorIdentifier() == arduino_vid)) {
                     arduino_available = true;
-                    qInfo() << "VID: " << serialPortInfo.vendorIdentifier() << " PID: " << serialPortInfo.productIdentifier() << endl;
+                    qInfo() << "VID: " << serialPortInfo.vendorIdentifier() << " PID: " << serialPortInfo.productIdentifier() << Qt::endl;
                     arduino_portName = serialPortInfo.portName();
-                    qInfo() << "Port: " << arduino_portName << endl;
+                    qInfo() << "Port: " << arduino_portName << Qt::endl;
                 }
             }
         }
@@ -118,6 +118,10 @@ void psaserial::readSerial(){
                         radioName +=  serialParsed[j];
                     }
                     stuff.CDTitle = radioName;
+                }else if (frameId == 0x0E){
+                    //Trip Instant stuff
+                }else if (frameId == 0x42){
+                    //Dark pressed, send keystroke or change theme
                 }
 
             }
@@ -125,11 +129,8 @@ void psaserial::readSerial(){
             i--;
         }
     }
-
-
-
 }
 
-radioData stuff = {0,"ERA","87.0","FM-1", "1", "Artist", "kalispera eimai terma kariolis", 101, 301, "Artist", "Titlos tou USB", 101, 301};
+radioData stuff = {0,"ERA","87.0","FM-1", "1", "Artist", "kalispera eimai terma kariolis", 101, 301, "Artist", "Titlos tou USB", 101, 301, 115, 6.5, 2500};
 
 

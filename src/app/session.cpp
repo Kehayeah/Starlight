@@ -14,6 +14,7 @@
 #include "app/arbiter.hpp"
 #include "app/pages/settings.hpp"
 #include "app/pages/media.hpp"
+#include "app/pages/vehicle.hpp"
 #include "app/quick_views/combo.hpp"
 #include "canbus/psaserial.hpp"
 #include "app/session.hpp"
@@ -146,6 +147,7 @@ Session::Layout::Layout(QSettings &settings, Arbiter &arbiter)
     this->pages_ = {
         this->openauto_page,
         new MediaPage(arbiter),
+        new VehiclePage(arbiter),
         new SettingsPage(arbiter)
     };
 
