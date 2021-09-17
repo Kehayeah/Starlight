@@ -182,8 +182,8 @@ Page *Session::Layout::next_enabled_page(Page *page) const
 }
 
 const char *Session::System::VOLUME_CMD = "amixer set Master %1% --quiet";
-const char *Session::System::SHUTDOWN_CMD = "sudo shutdown -h now";
-const char *Session::System::REBOOT_CMD = "sudo shutdown -r now";
+const char *Session::System::SHUTDOWN_CMD = "halt";
+const char *Session::System::REBOOT_CMD = "reboot";
 
 
 

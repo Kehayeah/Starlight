@@ -4,6 +4,7 @@
 #include <tpropertymap.h>
 #include <BluezQt/PendingCall>
 #include <QDirIterator>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QMediaPlaylist>
@@ -11,6 +12,7 @@
 #include "app/window.hpp"
 #include "app/pages/media.hpp"
 #include "canbus/psaserial.hpp"
+#include "app/widgets/messages.hpp"
 
 
 
@@ -35,11 +37,27 @@ QWidget *MediaPage::setting_menu(){
     QWidget *widget = new QWidget(this);
     Dialog *dialog = new Dialog(this->arbiter, true, this->window());
     dialog->set_body(new MediaPage::Settings(this->arbiter, this));
+    auto *layout = new QVBoxLayout(widget);
+
     QPushButton *settings_button = new QPushButton(widget);
     settings_button->setFlat(true);
     this->arbiter.forge().iconize("settings", settings_button, 24);
     connect(settings_button, &QPushButton::clicked, [dialog]() { dialog->open(); });
 
+    QPushButton *change = new QPushButton(widget);
+    change->setFlat(true);
+    change->setText("Show");
+    connect(change, &QPushButton::clicked, [](){stuff.diagShow = !stuff.diagShow;});
+
+    QSpinBox *input = new QSpinBox();
+
+    QPushButton *changeText = new QPushButton();
+    changeText->setFlat(true);
+    changeText->setText("Text Change");
+    connect(changeText, &QPushButton::clicked, [input](){stuff.diag = input->value();});
+
+    layout->addWidget(input);
+    layout->addWidget(changeText);
     return widget;
 }
 

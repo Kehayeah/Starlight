@@ -54,6 +54,8 @@ struct radioData{
     int fuelToEnd;
     float fuelNow;
     int rpms;
+    bool diagShow;
+    int diag;
 };
 
 extern radioData stuff;

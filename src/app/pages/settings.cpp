@@ -478,7 +478,7 @@ QWidget *AboutSettingsTab::load_msg()
     this->logo = new QLabel(widget);
     this->logo->setAlignment(Qt::AlignCenter);
 
-    this->label1 = new QLabel("Kehayeet's Very Really Good Dash", widget);
+    this->label1 = new QLabel("Kehayeet's Very Really Good Car Thing", widget);
     this->label1->setAlignment(Qt::AlignCenter);
     QLabel *label2 = new QLabel("Ver. 0.1", widget);
     label2->setAlignment(Qt::AlignCenter);

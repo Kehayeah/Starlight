@@ -1,3 +1,5 @@
+#include <QApplication>
+#include <QKeyEvent>
 #include "canbus/psaserial.hpp"
 
 psaserial::psaserial()
@@ -16,9 +18,9 @@ void psaserial::contactSerial(){
 
                 if ((serialPortInfo.productIdentifier() == arduino_pid) && (serialPortInfo.vendorIdentifier() == arduino_vid)) {
                     arduino_available = true;
-                    qInfo() << "VID: " << serialPortInfo.vendorIdentifier() << " PID: " << serialPortInfo.productIdentifier() << Qt::endl;
+                    qInfo() << "VID: " << serialPortInfo.vendorIdentifier() << " PID: " << serialPortInfo.productIdentifier() << endl;
                     arduino_portName = serialPortInfo.portName();
-                    qInfo() << "Port: " << arduino_portName << Qt::endl;
+                    qInfo() << "Port: " << arduino_portName << endl;
                 }
             }
         }
@@ -120,8 +122,38 @@ void psaserial::readSerial(){
                     stuff.CDTitle = radioName;
                 }else if (frameId == 0x0E){
                     //Trip Instant stuff
+                    quint16 autonomy = quint16(serialParsed[3]) << 8 | (quint16(serialParsed[4])&0xFF);
+                    quint16 fuelUsage = quint16(serialParsed[1]) << 8 | (quint16(serialParsed[2])&0xFF);
+
+                    if (serialParsed[3] == char(0xFF)){
+                        stuff.fuelToEnd = -1;
+                    }else{
+                        stuff.fuelToEnd = autonomy;
+                    }
+                    if (serialParsed[1] == char(0xFF)){
+                        stuff.fuelNow = 0;
+                    }else{
+                        stuff.fuelNow = fuelUsage / 10.0;
+                    }
                 }else if (frameId == 0x42){
                     //Dark pressed, send keystroke or change theme
+                    auto FOCUSOBJ = QApplication::focusObject();
+                    QKeyEvent  eve1 =  QKeyEvent(QEvent::KeyPress,Qt::Key_D,Qt::NoModifier,"D");
+                    QCoreApplication::sendEvent(FOCUSOBJ, &eve1);
+
+                }else if (frameId == 0x41){
+                    //Mode pressed, send S keystroke
+                    auto FOCUSOBJ = QApplication::focusObject();
+                    QKeyEvent  eve1 =  QKeyEvent(QEvent::KeyPress,Qt::Key_S,Qt::NoModifier,"S");
+                    QCoreApplication::sendEvent(FOCUSOBJ, &eve1);
+                }else if (frameId == 0x08){
+                    if (serialParsed[0] == char(0x80)){
+                        stuff.diagShow = true;
+                    }else{
+                        stuff.diagShow = false;
+                    }
+                    //Diagnostic Info Frame Handling
+                    stuff.diag = serialParsed[1];
                 }
 
             }
@@ -131,6 +163,25 @@ void psaserial::readSerial(){
     }
 }
 
-radioData stuff = {0,"ERA","87.0","FM-1", "1", "Artist", "kalispera eimai terma kariolis", 101, 301, "Artist", "Titlos tou USB", 101, 301, 115, 6.5, 2500};
+radioData stuff = {
+    0, //Volume
+    "Station Na", //Radio Name
+    "90.0", //Radio Freq
+    "FM-1", //Radio Band
+    "1", //Radio Memory
+    "CD Artist", //CD Artist
+    "kalispera eimai terma kariolis", //CD Title
+    101, //CD Current Time
+    301, //CD Time
+    "USBArtist", //USB Artist
+    "Titlos tou USB", //USB Title
+    101, //USB Current Time
+    301, //USB Time
+    115, //Fuel To Ded
+    6.5, //Fuel Now
+    2500, //RPM
+    false, //Show Diag
+    0x00 //Diag Message Code
+};
 
 

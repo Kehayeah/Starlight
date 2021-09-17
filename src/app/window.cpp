@@ -34,6 +34,7 @@ Starlight::Starlight(Arbiter &arbiter)
     , body()
 {
     this->volume = new VolumeSnackBar(arbiter);
+    this->msg = new MessageSnackBar(arbiter);
     auto layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
@@ -60,6 +61,10 @@ Starlight::Starlight(Arbiter &arbiter)
         if (oldVol != stuff.volume){
             volume->setVolume(stuff.volume);
             oldVol = stuff.volume;
+        }
+        if (oldMsg != stuff.diagShow){
+            msg->openMessage(stuff.diag, stuff.diagShow);
+            oldMsg = stuff.diagShow;
         }
     });
     timer->start(100);
