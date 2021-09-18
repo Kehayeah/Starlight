@@ -56,6 +56,7 @@ struct radioData{
     int rpms;
     bool diagShow;
     int diag;
+    int opMode;
 };
 
 extern radioData stuff;

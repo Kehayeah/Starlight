@@ -27,9 +27,55 @@ void MediaPage::init()
 {
     this->addTab(new RadioPlayerTab(this->arbiter, this), "Media");
     this->addTab(new CDPlayerTab(this->arbiter, this), "CD");
+    this->addTab(new AuxPlayerTab(this->arbiter, this), "AUX");
     this->addTab(new USBPlayerTab(this->arbiter, this), "USB");
     //this->addTab(new LocalPlayerTab(this->arbiter, this), "Local");
     this->addTab(this->setting_menu(), "test");
+
+    QTimer *timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, [this](){
+        if (oldMode != stuff.opMode){
+            switch (stuff.opMode){
+            case 1:
+                this->setCurrentIndex(0);
+                break;
+            case 2:
+                this->setCurrentIndex(1);
+                break;
+            case 4:
+                this->setCurrentIndex(2);
+                break;
+            case 6:
+                this->setCurrentIndex(3);
+                break;
+            }
+            oldMode = stuff.opMode;
+        }
+    });
+    timer->start(500);
+
+}
+
+AuxPlayerTab::AuxPlayerTab(Arbiter &arbiter, QWidget *parent)
+    : QWidget(parent)
+    , arbiter(arbiter){
+
+    auto *vLayout = new QVBoxLayout(this);
+    auto *hLayout = new QHBoxLayout();
+
+    auto *label = new QLabel("Playing From AUX");
+    label->setStyleSheet("QLabel {font-size: 40pt;}");
+    label->setAlignment(Qt::AlignHCenter);
+
+    hLayout->addWidget(label, Qt::AlignHCenter);
+    vLayout->addStretch(0);
+    vLayout->addLayout(hLayout);
+    vLayout->addStretch(0);
+
+}
+
+AuxPlayerTab::~AuxPlayerTab()
+{
 
 }
 

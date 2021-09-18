@@ -43,10 +43,22 @@ class MediaPage : public QTabWidget, public Page {
 
         Arbiter &arbiter;
     };
+    private:
+        int oldMode = 0;
 
     void init() override;
     QWidget *setting_menu();
 
+};
+
+class AuxPlayerTab : public QWidget{
+    Q_OBJECT
+
+    public:
+        AuxPlayerTab(Arbiter &arbiter, QWidget *parent = nullptr);
+        ~AuxPlayerTab();
+    private:
+         Arbiter &arbiter;
 };
 
 

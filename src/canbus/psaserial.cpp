@@ -154,6 +154,8 @@ void psaserial::readSerial(){
                     }
                     //Diagnostic Info Frame Handling
                     stuff.diag = serialParsed[1];
+                }else if (frameId == 0x03){
+                    stuff.opMode = serialParsed[0];
                 }
 
             }
@@ -181,7 +183,8 @@ radioData stuff = {
     6.5, //Fuel Now
     2500, //RPM
     false, //Show Diag
-    0x00 //Diag Message Code
+    0x00, //Diag Message Code
+    0 //Operation Mode (Radio, Cd, USB, etc)
 };
 
 
