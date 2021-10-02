@@ -14,7 +14,7 @@
 #include "app/pages/page.hpp"
 #include "app/widgets/volume.hpp"
 #include "app/arbiter.hpp"
-#include "app/widgets/messages.hpp"
+
 
 class Starlight : public QWidget {
     Q_OBJECT
@@ -42,10 +42,7 @@ class Starlight : public QWidget {
     NavRail rail;
     Body body;
     void init_connected_pages();
-    VolumeSnackBar *volume;
-    int oldVol = 0;
-    MessageSnackBar *msg;
-    bool oldMsg = false;
+
     void set_page(Page *page);
     QWidget *control_bar() const;
     QWidget *power_control() const;

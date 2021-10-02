@@ -278,8 +278,8 @@ QWidget *Session::Forge::volume_slider(bool buttons) const
     auto slider = new QSlider(Qt::Orientation::Horizontal);
     slider->setTracking(false);
     slider->setRange(0, 30);
-    slider->setValue(stuff.volume);
-    QObject::connect(slider, &QSlider::sliderReleased, [this, slider]{ slider->setValue(stuff.volume); });
+    slider->setValue(stuff.volume[1]);
+    QObject::connect(slider, &QSlider::sliderReleased, [this, slider]{ slider->setValue(stuff.volume[1]); });
     //QObject::connect(&this->arbiter_, &Arbiter::volume_changed, [slider](int volume) { slider->setValue(volume); });
 
     if (buttons) {

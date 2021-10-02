@@ -188,3 +188,27 @@ QWidget *SnackBar::get_ref()
     }
     return nullptr;
 }
+
+void audioDialog::resizeEvent(QResizeEvent* event)
+{
+    // its possible the ref didnt exist when the parent was originally set
+    if (!this->parentWidget()) {
+        auto flags = this->windowFlags();
+        this->setParent(this->get_ref());
+        this->setWindowFlags(flags);
+    }
+
+    if (QWidget *parent = this->parentWidget())
+        this->setFixedWidth(parent->width() * (2 / 3.0));
+
+    Dialog::resizeEvent(event);
+}
+
+QWidget *audioDialog::get_ref()
+{
+    for (QWidget *widget : qApp->allWidgets()) {
+        if (widget->objectName() == "MsgRef")
+            return widget;
+    }
+    return nullptr;
+}

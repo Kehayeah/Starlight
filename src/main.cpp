@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     splash.setMask(pixmap.mask());
     splash.show();
     starlight.processEvents();
-    psaserial();
+
     Window window;
     window.setWindowIcon(QIcon(":/logo.png"));
     window.setWindowFlags(Qt::FramelessWindowHint);

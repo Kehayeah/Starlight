@@ -1,7 +1,6 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QStackedWidget>
-
 #include "app/quick_views/quick_view.hpp"
 #include "app/widgets/dialog.hpp"
 
@@ -33,8 +32,9 @@ Starlight::Starlight(Arbiter &arbiter)
     , rail()
     , body()
 {
-    this->volume = new VolumeSnackBar(arbiter);
-    this->msg = new MessageSnackBar(arbiter);
+
+
+
     auto layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
@@ -56,18 +56,6 @@ Starlight::Starlight(Arbiter &arbiter)
             this->arbiter.set_curr_page(this->arbiter.layout().next_enabled_page(page));
     });
 
-    QTimer *timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, [this](){
-        if (oldVol != stuff.volume){
-            volume->setVolume(stuff.volume);
-            oldVol = stuff.volume;
-        }
-        if (oldMsg != stuff.diagShow){
-            msg->openMessage(stuff.diag, stuff.diagShow);
-            oldMsg = stuff.diagShow;
-        }
-    });
-    timer->start(100);
 }
 
 void Starlight::init()
@@ -75,6 +63,7 @@ void Starlight::init()
     auto msg_ref = new QWidget();
     msg_ref->setObjectName("MsgRef");
     this->body.layout->addWidget(msg_ref);
+
 
     this->body.layout->addWidget(this->control_bar());
 

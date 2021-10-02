@@ -15,7 +15,6 @@
 #include "app/widgets/messages.hpp"
 
 
-
 MediaPage::MediaPage(Arbiter &arbiter, QWidget *parent)
     : QTabWidget(parent)
     , Page(arbiter, "Media", "play_circle_outline", true, this)
@@ -31,28 +30,45 @@ void MediaPage::init()
     this->addTab(new USBPlayerTab(this->arbiter, this), "USB");
     //this->addTab(new LocalPlayerTab(this->arbiter, this), "Local");
     this->addTab(this->setting_menu(), "test");
-
+    psaserial *pog = new psaserial(this->arbiter);
+    pog->createDialog(this->arbiter, this->window());
+    pog->contactSerial();
+    this->volume = new VolumeSnackBar(arbiter);
+    this->msg = new MessageSnackBar(arbiter);
     QTimer *timer = new QTimer(this);
     connect(timer, &QTimer::timeout, [this](){
         if (oldMode != stuff.opMode){
             switch (stuff.opMode){
             case 1:
                 this->setCurrentIndex(0);
+                oldMode = stuff.opMode;
                 break;
             case 2:
                 this->setCurrentIndex(1);
+                oldMode = stuff.opMode;
                 break;
             case 4:
                 this->setCurrentIndex(2);
+                oldMode = stuff.opMode;
                 break;
             case 6:
                 this->setCurrentIndex(3);
+                oldMode = stuff.opMode;
                 break;
             }
-            oldMode = stuff.opMode;
+
+        }
+        if (oldVol != stuff.volume[1] && stuff.volume[0] == 0){
+            volume->setVolume(stuff.volume[1]);
+            oldVol = stuff.volume[1];
+        }
+        if (oldMsg != stuff.diagShow){
+            msg->openMessage(stuff.diag, stuff.diagShow);
+            oldMsg = stuff.diagShow;
         }
     });
-    timer->start(500);
+    timer->start(100);
+
 
 }
 
@@ -81,14 +97,12 @@ AuxPlayerTab::~AuxPlayerTab()
 
 QWidget *MediaPage::setting_menu(){
     QWidget *widget = new QWidget(this);
-    Dialog *dialog = new Dialog(this->arbiter, true, this->window());
-    dialog->set_body(new MediaPage::Settings(this->arbiter, this));
     auto *layout = new QVBoxLayout(widget);
+
 
     QPushButton *settings_button = new QPushButton(widget);
     settings_button->setFlat(true);
     this->arbiter.forge().iconize("settings", settings_button, 24);
-    connect(settings_button, &QPushButton::clicked, [dialog]() { dialog->open(); });
 
     QPushButton *change = new QPushButton(widget);
     change->setFlat(true);
@@ -100,177 +114,11 @@ QWidget *MediaPage::setting_menu(){
     QPushButton *changeText = new QPushButton();
     changeText->setFlat(true);
     changeText->setText("Text Change");
-    connect(changeText, &QPushButton::clicked, [input](){stuff.diag = input->value();});
+    //connect(changeText, &QPushButton::clicked, [this, dialog](){dialog->open();});
 
     layout->addWidget(input);
     layout->addWidget(changeText);
     return widget;
-}
-
-MediaPage::Settings::Settings(Arbiter &arbiter, QWidget *parent)
-    : QWidget(parent)
-    , arbiter(arbiter)
-{
-
-    QVBoxLayout *layout = new QVBoxLayout(this);
-    QLabel *text = new QLabel("Audio Settings");
-    layout->addWidget(text);
-    layout->addWidget(Session::Forge::br(), 1);
-    layout->addLayout(this->settings_widget());
-}
-
-QSize MediaPage::Settings::sizeHint() const
-{
-    int label_width = QFontMetrics(this->font()).averageCharWidth() * 20;
-    return QSize(800, 500);
-}
-
-
-QLayout *MediaPage::Settings::settings_widget(){
-    QVBoxLayout *layout = new QVBoxLayout();
-    QVBoxLayout *bassTreb = new QVBoxLayout();
-    QGridLayout *topRow = new QGridLayout();
-    QGridLayout *botRow = new QGridLayout();
-
-    bassTreb->addLayout(this->bass_widget(), 1);
-    bassTreb->addLayout(this->treble_widget(), 1);
-    topRow->addLayout(bassTreb, 0, 0, Qt::AlignCenter);
-    topRow->addLayout(this->loud_widget(), 0, 1, Qt::AlignCenter);
-    botRow->addLayout(this->autoSound_widget(), 0, 0, Qt::AlignCenter);
-    botRow->addLayout(this->eq_widget(), 0, 1, Qt::AlignCenter);
-    layout->addLayout(topRow);
-    layout->addLayout(this->bal_widget(), 1);
-    layout->addLayout(this->fad_widget(), 1);
-    layout->addLayout(botRow);
-    return layout;
-
-}
-
-QLayout *MediaPage::Settings::loud_widget(){
-    QVBoxLayout *layout = new QVBoxLayout();
-
-    QLabel *text = new QLabel("Loudness");
-    QLabel *state = new QLabel("On");
-    state->setAlignment(Qt::AlignHCenter);
-    text->setAlignment(Qt::AlignHCenter);
-    text->setStyleSheet("QLabel::hover{background-color: palette(base); padding-right: 10px; border-radius: 10px;}");
-    layout->addWidget(text);
-    layout->addWidget(state);
-
-    return layout;
-}
-
-QLayout *MediaPage::Settings::autoSound_widget(){
-    QVBoxLayout *layout = new QVBoxLayout();
-
-    QLabel *text = new QLabel("Auto Volume");
-    QLabel *state = new QLabel("On");
-    state->setAlignment(Qt::AlignHCenter);
-    text->setAlignment(Qt::AlignHCenter);
-
-    layout->addWidget(text);
-    layout->addWidget(state);
-
-    return layout;
-}
-
-QLayout *MediaPage::Settings::eq_widget(){
-    QVBoxLayout *layout = new QVBoxLayout();
-
-    QLabel *text = new QLabel("Eq Preset");
-    QLabel *state = new QLabel("Classic");
-    state->setAlignment(Qt::AlignHCenter);
-    text->setAlignment(Qt::AlignHCenter);
-
-    layout->addWidget(text);
-    layout->addWidget(state);
-
-    return layout;
-}
-
-QLayout *MediaPage::Settings::bass_widget(){
-    QVBoxLayout *layout = new QVBoxLayout();
-    QHBoxLayout *layout2 = new QHBoxLayout();
-    QHBoxLayout *layout3 = new QHBoxLayout();
-    QLabel *text = new QLabel("Bass");
-    QLabel *numbMin = new QLabel("-9");
-    QLabel *numbMax = new QLabel("9");
-    QSlider *slide = new QSlider(Qt::Orientation::Horizontal);
-    slide->setRange(-9, 9);
-    slide->setValue(0);
-    slide->setEnabled(false);
-    text->setAlignment(Qt::AlignBottom);
-    text->setAlignment(Qt::AlignHCenter);
-    layout2->addWidget(text);
-    layout3->addWidget(numbMin,1, Qt::AlignRight);
-    layout3->addWidget(slide,5);
-    layout3->addWidget(numbMax,1, Qt::AlignLeft);
-    layout->addLayout(layout2);
-    layout->addLayout(layout3);
-
-    return layout;
-}
-
-QLayout *MediaPage::Settings::treble_widget(){
-    QVBoxLayout *layout = new QVBoxLayout();
-    QHBoxLayout *layout2 = new QHBoxLayout();
-    QHBoxLayout *layout3 = new QHBoxLayout();
-    QLabel *text = new QLabel("Treble");
-    QLabel *numbMin = new QLabel("-9");
-    QLabel *numbMax = new QLabel("9");
-    QSlider *slide = new QSlider(Qt::Orientation::Horizontal);
-    slide->setRange(-9, 9);
-    slide->setValue(0);
-    text->setAlignment(Qt::AlignBottom);
-    text->setAlignment(Qt::AlignHCenter);
-    layout2->addWidget(text);
-    layout3->addWidget(numbMin,1, Qt::AlignRight);
-    layout3->addWidget(slide,5);
-    layout3->addWidget(numbMax,1, Qt::AlignLeft);
-    layout->addLayout(layout2);
-    layout->addLayout(layout3);
-
-    return layout;
-}
-
-QLayout *MediaPage::Settings::bal_widget(){
-    QVBoxLayout *layout = new QVBoxLayout();
-    QHBoxLayout *layout2 = new QHBoxLayout();
-    QHBoxLayout *layout3 = new QHBoxLayout();
-    QLabel *text = new QLabel("Balance");
-    QLabel *numbMin = new QLabel("L");
-    QLabel *numbMax = new QLabel("R");
-    QSlider *slide = new QSlider(Qt::Orientation::Horizontal);
-    slide->setRange(-9, 9);
-    slide->setValue(0);
-    text->setAlignment(Qt::AlignBottom);
-    text->setAlignment(Qt::AlignHCenter);
-    layout2->addWidget(text);
-    layout3->addWidget(numbMin,1, Qt::AlignRight);
-    layout3->addWidget(slide,5);
-    layout3->addWidget(numbMax,1, Qt::AlignLeft);
-    layout->addLayout(layout2);
-    layout->addLayout(layout3);
-
-    return layout;
-}
-
-QLayout *MediaPage::Settings::fad_widget(){
-    QVBoxLayout *layout = new QVBoxLayout();
-    QHBoxLayout *layout2 = new QHBoxLayout();
-    QHBoxLayout *layout3 = new QHBoxLayout();
-    QLabel *numbMin = new QLabel("R");
-    QLabel *numbMax = new QLabel("F");
-    QSlider *slide = new QSlider(Qt::Orientation::Horizontal);
-    slide->setRange(-9, 9);
-    slide->setValue(0);
-    layout3->addWidget(numbMin,1, Qt::AlignRight);
-    layout3->addWidget(slide,5);
-    layout3->addWidget(numbMax,1, Qt::AlignLeft);
-    layout->addLayout(layout2);
-    layout->addLayout(layout3);
-
-    return layout;
 }
 
 
@@ -317,16 +165,24 @@ QWidget *RadioPlayerTab::tuner_widget()
     auto memory = new QLabel("1");
     memory->setStyleSheet("QLabel {font-size: 25pt;}");
 
+
     QTimer *timer = new QTimer(this);
     connect(timer, &QTimer::timeout, [this, station, freq, band, memory](){
+        // This sets the memory text
+        QString memText;
+        if (stuff.memory == 0){
+            memText = QString("Not in Memory");
+        }else{
+            memText = QString::number(stuff.memory);
+        }
         this->config->set_radio_station(stuff.frequency.toDouble());
         station->setText(stuff.radioName);
         freq->setText(stuff.frequency);
         band->setText(stuff.band);
-        memory->setText("Mem " + stuff.memory);
+        memory->setText("Mem " + memText);
         tuner->setSliderPosition(int(stuff.frequency.toDouble() * 10));
     });
-    timer->start(50);
+    timer->start(100);
 
     //layout->addStretch(2);
     layout->addWidget(station,0,0, Qt::AlignHCenter);
@@ -380,24 +236,15 @@ QWidget *CDPlayerTab::track_widget()
 {
 
     QWidget *widget = new QWidget(this);
-    auto layout = new QGridLayout();
-    QVBoxLayout *layout2 = new QVBoxLayout(widget);
+    auto layout = new QGridLayout(widget);
 
 
     QLabel *artist = new QLabel("Artist");
-    artist->setStyleSheet("QLabel {font-size: 35pt;}");
-    artist->setAlignment(Qt::AlignHCenter);
+    artist->setStyleSheet("QLabel {font-size: 40pt;}");
 
 
     QLabel *title = new QLabel("Title");
-    title->setStyleSheet("QLabel {font-size: 40pt;}");
-    title->setAlignment(Qt::AlignHCenter);
-
-    QLabel *trackNum = new QLabel("Track --/---");
-    trackNum->setStyleSheet("QLabel {font-size: 30pt;}");
-
-    QLabel *cdType = new QLabel("Audio CD");
-    cdType->setStyleSheet("QLabel {font-size: 30pt;}");
+    title->setStyleSheet("QLabel {font-size: 45pt;}");
 
     QTimer *timer = new QTimer(this);
     connect(timer, &QTimer::timeout, [this, artist, title](){
@@ -406,11 +253,8 @@ QWidget *CDPlayerTab::track_widget()
     });
     timer->start(1000);
 
-    layout2->addWidget(title);
-    layout2->addWidget(artist);
-    layout->addWidget(trackNum, 0, 0, Qt::AlignHCenter);
-    layout->addWidget(cdType, 0, 1, Qt::AlignHCenter);
-    layout2->addLayout(layout);
+    layout->addWidget(artist, 1, 0, Qt::AlignHCenter);
+    layout->addWidget(title, 0, 0, Qt::AlignHCenter);
     return widget;
 }
 
@@ -419,24 +263,15 @@ QWidget *CDPlayerTab::controls_widget()
     QWidget *widget = new QWidget(this);
     QHBoxLayout *layout = new QHBoxLayout(widget);
 
-    QSlider *slider = new QSlider(Qt::Orientation::Horizontal, widget);
-    slider->setTracking(false);
-    slider->setRange(0, 0);
-    QLabel *valueAll = new QLabel("1:01");
     QLabel *valueRem = new QLabel("1:01");
     QTimer *timer = new QTimer(this);
     //Remake literally everything plz.
-    connect(timer, &QTimer::timeout, [this, valueRem, slider](){
+    connect(timer, &QTimer::timeout, [this, valueRem](){
         valueRem->setText(QString::number(stuff.CDTimeCurr));
-        slider->setRange(0, stuff.CDTimeAll);
-        slider->setValue(50);
     });
     timer->start(1000);
 
-    layout->addStretch(4);
     layout->addWidget(valueRem, 3);
-    layout->addWidget(slider, 28);
-    layout->addWidget(valueAll, 3);
     layout->addStretch(1);
 
     return widget;
@@ -508,3 +343,5 @@ QWidget *USBPlayerTab::controls_widget()
 
     return widget;
 }
+
+

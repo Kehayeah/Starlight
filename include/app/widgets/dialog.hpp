@@ -63,3 +63,15 @@ class SnackBar : public Dialog {
    private:
     QWidget *get_ref();
 };
+
+class audioDialog : public Dialog {
+    Q_OBJECT
+
+   public:
+    audioDialog(Arbiter &arbiter) : Dialog(arbiter, true, get_ref()) {}
+
+    void resizeEvent(QResizeEvent* event);
+
+   private:
+    QWidget *get_ref();
+};

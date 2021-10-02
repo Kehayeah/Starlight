@@ -14,8 +14,11 @@
 #include "canbus/psaserial.hpp"
 #include "app/widgets/volume.hpp"
 #include "app/widgets/dialog.hpp"
+#include "app/widgets/messages.hpp"
 
 class Arbiter;
+
+
 
 class MediaPage : public QTabWidget, public Page {
     Q_OBJECT
@@ -24,27 +27,14 @@ class MediaPage : public QTabWidget, public Page {
    public:
     MediaPage(Arbiter &arbiter, QWidget *parent = nullptr);
 
-    class Settings : public QWidget {
-       public:
-        Settings(Arbiter &arbiter, QWidget *parent = nullptr);
 
-       protected:
-        QSize sizeHint() const override;
-
-       private:
-        QLayout *settings_widget();
-        QLayout *bass_widget();
-        QLayout *treble_widget();
-        QLayout *bal_widget();
-        QLayout *fad_widget();
-        QLayout *eq_widget();
-        QLayout *loud_widget();
-        QLayout *autoSound_widget();
-
-        Arbiter &arbiter;
-    };
     private:
         int oldMode = 0;
+        auSettings *audSettings;
+        VolumeSnackBar *volume;
+        int oldVol = 0;
+        MessageSnackBar *msg;
+        bool oldMsg = false;
 
     void init() override;
     QWidget *setting_menu();
