@@ -62,173 +62,188 @@ void psaserial::readSerial(){
     //Parse info Here
     if (arduino->canReadLine()){
         serialData = arduino->readAll();
-        int z = 0;
-        while (serialData[z] != '\n'){
-            z++;
-            //qInfo() << "Z: " << z << endl;
-        }
         serialParsed.clear();
-        for (int j = 0; j <= z; j++){
-            serialParsed.append(serialData[j]);
+        int z = 0;
+        while (serialData.size() > 0){
+            int i = 0;
+            serialBuffer.clear();
+            for (i = 0; i < serialData.size(); i++){
+                if (serialData[i] == '\n' && i > 4){
+                    serialBuffer.append(serialData[i]);
+                    break;
+                }else{
+                    serialBuffer.append(serialData[i]);
+
+                }
+            }
+            serialParsed.append(serialBuffer);
+            serialData.remove(0, i+1);
+            z++;
+            if (z == 5){
+                break;
+            }
         }
-        //qInfo() << "DATA: " << serialParsed.toHex() << endl;
 
-        quint16 frequen;
-        quint16 autonomy;
-        quint16 fuelUsage;
-        frameId = serialParsed[2];
-        switch (frameId) {
-            case 0x01:
-                stuff.volume[1] = int(serialParsed[3] & 0b00011111);
-                stuff.volume[0] = int(serialParsed[3] & 0b11100000);
-                qInfo() << "Open: " << stuff.volume[0] << "Vol: " << stuff.volume[1] << endl;
-            break;
-            case 0x04:
-                radioName = QString();
-                //Handle Radio Frames
-                for (int j = 3; j < int(serialParsed[1] + 2); j++){
-                    radioName +=  serialParsed[j];
-                }
-                stuff.radioName = radioName;
+        for (int i = 0; i < serialParsed.size(); i++){
+            qInfo() << "DATA "<< i << ": " << serialParsed[i].toHex() << endl;
+
+            quint16 frequen;
+            quint16 autonomy;
+            quint16 fuelUsage;
+            frameId = serialParsed[i][2];
+            switch (frameId) {
+                case 0x01:
+                    stuff.volume[1] = int(serialParsed[i][3] & 0b00011111);
+                    stuff.volume[0] = int(serialParsed[i][3] & 0b11100000);
+                    qInfo() << "Open: " << stuff.volume[0] << "Vol: " << stuff.volume[1] << endl;
                 break;
-            case 0x05:
-                stuff.frequency = QString();
-                frequen = quint16(serialParsed[3]) << 8 | (quint16(serialParsed[4])&0xFF);
-                stuff.frequency = QString::number(double(frequen) / 10, 'f', 1);
-                break;
-            case 0x06:
-                switch (serialParsed[3]){
-                    case 1:
-                        stuff.band = "FM-1";
-                        break;
-
-                    case 2:
-                        stuff.band = "FM-2";
-                        break;
-
-                    case 4:
-                        stuff.band = "FM-AST";
-                        break;
-
-                    case 5:
-                        stuff.band = "AM";
-                        break;
+                case 0x04:
+                    radioName = QString();
+                    //Handle Radio Frames
+                    for (int j = 3; j < int(serialParsed[i][1] + 2); j++){
+                        radioName +=  serialParsed[i][j];
                     }
-                break;
-            case 0x1A:
-                //CD Artist
-                //Uses same variable because why shouldn't I confuse myself?
-                cdArt.clear();
-                for (int j = 3; j < serialParsed[1]+2; j++){
-                    cdArt +=  serialParsed[j];
-                    //qInfo() << cdArt << endl;
-                }
-                stuff.CDArtist = cdArt;
-                break;
-            case 0x1B:
-                //CD Title
-                //Uses same variable because why shouldn't I confuse myself?
-                cdTit.clear();
-                for (int j = 3; j < z-1; j++){
-                    cdTit +=  serialParsed[j];
-                }
-                stuff.CDTitle = cdTit;
-                break;
-            case 0x0E:
-                //Trip Instant stuff
-                autonomy = quint16(serialParsed[3]) << 8 | (quint16(serialParsed[4])&0xFF);
-                fuelUsage = quint16(serialParsed[1]) << 8 | (quint16(serialParsed[2])&0xFF);
+                    stuff.radioName = radioName;
+                    break;
+                case 0x05:
+                    stuff.frequency = QString();
+                    frequen = quint16(serialParsed[i][3]) << 8 | (quint16(serialParsed[i][4])&0xFF);
+                    stuff.frequency = QString::number(double(frequen) / 10, 'f', 1);
+                    break;
+                case 0x06:
+                    switch (serialParsed[i][3]){
+                        case 1:
+                            stuff.band = "FM-1";
+                            break;
 
-                if (serialParsed[3] == char(0xFF)){
-                    stuff.fuelToEnd = -1;
-                }else{
-                    stuff.fuelToEnd = autonomy;
-                }
-                if (serialParsed[1] == char(0xFF)){
-                    stuff.fuelNow = 0;
-                }else{
-                    stuff.fuelNow = fuelUsage / 10.0;
-                }
-                break;
-            case 0x42:
-                if (serialParsed[3] == char(0x01)){
-                    //Dark pressed, send keystroke or change theme
-                    auto FOCUSOBJ = QApplication::focusObject();
-                    QKeyEvent  eve1 =  QKeyEvent(QEvent::KeyPress,Qt::Key_D,Qt::NoModifier,"D");
-                    QCoreApplication::sendEvent(FOCUSOBJ, &eve1);
-                }
-                break;
-             case 0x41:
-                if (serialParsed[3] & 0x01){
-                    //Mode pressed, send S keystroke
-                    auto FOCUSOBJ = QApplication::focusObject();
-                    QKeyEvent  eve1 =  QKeyEvent(QEvent::KeyPress,Qt::Key_S,Qt::NoModifier,"S");
-                    QCoreApplication::sendEvent(FOCUSOBJ, &eve1);
-                }
-                break;
-            case 0x08:
-                if (serialParsed[0] & 0x01){
-                    stuff.diagShow = true;
-                }else{
-                    stuff.diagShow = false;
-                }
-                //Diagnostic Info Frame Handling
-                stuff.diag = serialParsed[1];
-                break;
-            case 0x03:
-                if (stuff.opMode != serialParsed[3]){
-                    stuff.opMode = serialParsed[3];
-                }
-                break;
-            case 0x1C:
-                if (stuff.memory != serialParsed[3]){
-                    stuff.memory = serialParsed[3];
-                }
-                break;
-            case 0x10:
-            QString bal = QString("%1").arg(quint8(serialParsed[3]), 8, 2, QChar('0'));
-            QString fad = QString("%1").arg(quint8(serialParsed[4]), 8, 2, QChar('0'));
-            QString bass = QString("%1").arg(quint8(serialParsed[5]), 8, 2, QChar('0'));
-            QString treble = QString("%1").arg(quint8(serialParsed[7]), 8, 2, QChar('0'));
-            QString manyThings = QString("%1").arg(quint8(serialParsed[8]), 8, 2, QChar('0'));
-            QString eq = QString("%1").arg(quint8(serialParsed[9]), 8, 2, QChar('0'));
-            if (aSettings.isBass != (bass[0])){
-                aSettings.isBass = bool(bass[0].digitValue());
+                        case 2:
+                            stuff.band = "FM-2";
+                            break;
 
-            }
-            if (aSettings.isTreble != treble[0]){
-                aSettings.isTreble = bool(treble[0].digitValue());
-            }
-            if (aSettings.isBalance != bal[0]){
-                aSettings.isBalance = bool(bal[0].digitValue());
-            }
-            if (aSettings.isFader != fad[0]){
-                aSettings.isFader = bool(fad[0].digitValue());
-            }
-            if (aSettings.isLoud != manyThings[0]){
-                aSettings.isLoud = bool(manyThings[0].digitValue());
-            }
-            if (aSettings.isAutoVol != manyThings[3]){
-                aSettings.isAutoVol = bool(manyThings[3].digitValue());
-            }
-            if (aSettings.isEq != eq[1]){
-                aSettings.isEq = bool(eq[1].digitValue());
-            }
-            aSettings.balance = bal.remove(0,1).toInt(nullptr, 2) - 63;
-            aSettings.fade = fad.remove(0,1).toInt(nullptr, 2) - 63;
-            aSettings.bass = bass.remove(0,1).toInt(nullptr, 2) - 63;
-            aSettings.treble = treble.remove(0,1).toInt(nullptr, 2) - 63;
-            aSettings.loudness = bool(manyThings[1].digitValue());
+                        case 4:
+                            stuff.band = "FM-AST";
+                            break;
 
-            aSettings.autoVol = bool(manyThings[7].digitValue());
-            aSettings.equalizer = eq.remove(0, 3).toInt(nullptr, 2);
-            qInfo() << "EQ Thing: " << aSettings.equalizer <<endl;
+                        case 5:
+                            stuff.band = "AM";
+                            break;
+                        }
+                    break;
+                case 0x1A:
+                    //CD Artist
+                    //Uses same variable because why shouldn't I confuse myself?
+                    cdArt.clear();
+                    for (int j = 3; j < serialParsed[i][1]+2; j++){
+                        cdArt +=  serialParsed[i][j];
+                        //qInfo() << cdArt << endl;
+                    }
+                    stuff.CDArtist = cdArt;
+                    break;
+                case 0x1B:
+                    //CD Title
+                    //Uses same variable because why shouldn't I confuse myself?
+                    cdTit.clear();
+                    for (int j = 3; j < serialParsed[i][1]+2; j++){
+                        cdTit +=  serialParsed[i][j];
+                    }
+                    stuff.CDTitle = cdTit;
+                    break;
+                case 0x0E:
+                    //Trip Instant stuff
+                    autonomy = quint16(serialParsed[i][3]) << 8 | (quint16(serialParsed[i][4])&0xFF);
+                    fuelUsage = quint16(serialParsed[i][1]) << 8 | (quint16(serialParsed[i][2])&0xFF);
 
-            addAudioSettings();
+                    if (serialParsed[i][3] == char(0xFF)){
+                        stuff.fuelToEnd = -1;
+                    }else{
+                        stuff.fuelToEnd = autonomy;
+                    }
+                    if (serialParsed[i][1] == char(0xFF)){
+                        stuff.fuelNow = 0;
+                    }else{
+                        stuff.fuelNow = fuelUsage / 10.0;
+                    }
+                    break;
+                case 0x42:
+                    if (serialParsed[i][3] == char(0x01)){
+                        //Dark pressed, send keystroke or change theme
+                        auto FOCUSOBJ = QApplication::focusObject();
+                        QKeyEvent  eve1 =  QKeyEvent(QEvent::KeyPress,Qt::Key_D,Qt::NoModifier,"D");
+                        QCoreApplication::sendEvent(FOCUSOBJ, &eve1);
+                    }
+                    break;
+                 case 0x41:
+                    if (serialParsed[i][3] & 0x01){
+                        //Mode pressed, send S keystroke
+                        auto FOCUSOBJ = QApplication::focusObject();
+                        QKeyEvent  eve1 =  QKeyEvent(QEvent::KeyPress,Qt::Key_S,Qt::NoModifier,"S");
+                        QCoreApplication::sendEvent(FOCUSOBJ, &eve1);
+                    }
+                    break;
+                case 0x08:
+                    if (serialParsed[i][0] & 0x01){
+                        stuff.diagShow = true;
+                    }else{
+                        stuff.diagShow = false;
+                    }
+                    //Diagnostic Info Frame Handling
+                    stuff.diag = serialParsed[i][1];
+                    break;
+                case 0x03:
+                    if (stuff.opMode != serialParsed[i][3]){
+                        stuff.opMode = serialParsed[i][3];
+                    }
+                    break;
+                case 0x1C:
+                    if (stuff.memory != serialParsed[i][3]){
+                        stuff.memory = serialParsed[i][3];
+                    }
+                    break;
+                case 0x10:
+                QString bal = QString("%1").arg(quint8(serialParsed[i][3]), 8, 2, QChar('0'));
+                QString fad = QString("%1").arg(quint8(serialParsed[i][4]), 8, 2, QChar('0'));
+                QString bass = QString("%1").arg(quint8(serialParsed[i][5]), 8, 2, QChar('0'));
+                QString treble = QString("%1").arg(quint8(serialParsed[i][7]), 8, 2, QChar('0'));
+                QString manyThings = QString("%1").arg(quint8(serialParsed[i][8]), 8, 2, QChar('0'));
+                QString eq = QString("%1").arg(quint8(serialParsed[i][9]), 8, 2, QChar('0'));
+                if (aSettings.isBass != (bass[0])){
+                    aSettings.isBass = bool(bass[0].digitValue());
 
-            //qInfo() << "Is Bass: " << QString("%1").arg(quint8(serialParsed[3]), 8, 2, QChar('0'))[0] << endl;
+                }
+                if (aSettings.isTreble != treble[0]){
+                    aSettings.isTreble = bool(treble[0].digitValue());
+                }
+                if (aSettings.isBalance != bal[0]){
+                    aSettings.isBalance = bool(bal[0].digitValue());
+                }
+                if (aSettings.isFader != fad[0]){
+                    aSettings.isFader = bool(fad[0].digitValue());
+                }
+                if (aSettings.isLoud != manyThings[0]){
+                    aSettings.isLoud = bool(manyThings[0].digitValue());
+                }
+                if (aSettings.isAutoVol != manyThings[3]){
+                    aSettings.isAutoVol = bool(manyThings[3].digitValue());
+                }
+                if (aSettings.isEq != eq[1]){
+                    aSettings.isEq = bool(eq[1].digitValue());
+                }
+                aSettings.balance = bal.remove(0,1).toInt(nullptr, 2) - 63;
+                aSettings.fade = fad.remove(0,1).toInt(nullptr, 2) - 63;
+                aSettings.bass = bass.remove(0,1).toInt(nullptr, 2) - 63;
+                aSettings.treble = treble.remove(0,1).toInt(nullptr, 2) - 63;
+                aSettings.loudness = bool(manyThings[1].digitValue());
 
-                break;
+                aSettings.autoVol = bool(manyThings[7].digitValue());
+                aSettings.equalizer = eq.remove(0, 3).toInt(nullptr, 2);
+                qInfo() << "EQ Thing: " << aSettings.equalizer <<endl;
+
+                addAudioSettings();
+
+                //qInfo() << "Is Bass: " << QString("%1").arg(quint8(serialParsed[3]), 8, 2, QChar('0'))[0] << endl;
+
+                    break;
+            }
         }
     }
 }

@@ -65,8 +65,8 @@ class psaserial : public QMessageBox
         QString cdArt;
         QSerialPort *arduino;
         QByteArray serialData;
-        QByteArray serialParsed;
-        QString serialBuffer;
+        QVector<QByteArray> serialParsed;
+        QByteArray serialBuffer;
         QString parsed_data;
     private slots:
         void readSerial();
